@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>HiperList</title>
+  <style>
+    :root { --bg:#0b0f17; --panel:#111827; --panel-2:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --border:rgba(148,163,184,.18); --accent:#7c3aed; --accent-2:#a78bfa; --chip:rgba(124,58,237,.14); --shadow:0 20px 60px rgba(0,0,0,.28); }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top, rgba(124,58,237,.18), transparent 28%), linear-gradient(180deg, #050816 0%, var(--bg) 42%, #050816 100%); color:var(--text); }
+    .app { max-width:1500px; margin:0 auto; padding:24px; }
+    header { display:flex; flex-wrap:wrap; gap:16px; align-items:end; justify-content:space-between; margin-bottom:20px; }
+    .title-block h1 { margin:0; font-size:clamp(2rem,4vw,3.2rem); letter-spacing:-.04em; line-height:1; }
+    .title-block p { margin:8px 0 0; color:var(--muted); max-width:72ch; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-end; }
+    .toolbar button { border:1px solid var(--border); background:rgba(15,23,42,.78); color:var(--text); padding:10px 14px; border-radius:999px; cursor:pointer; transition:.18s ease; font-weight:600; }
+    .toolbar button:hover { transform:translateY(-1px); border-color:rgba(167,139,250,.35); }
+    .toolbar button.primary { background:linear-gradient(135deg, rgba(124,58,237,.95), rgba(167,139,250,.9)); border-color:transparent; color:#fff; box-shadow:0 10px 30px rgba(124,58,237,.25); }
+    .stats { display:flex; flex-wrap:wrap; gap:10px; }
+    .stat { background:rgba(15,23,42,.75); border:1px solid var(--border); border-radius:16px; padding:10px 14px; box-shadow:var(--shadow); min-width:130px; }
+    .stat .label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; }
+    .stat .value { font-size:1.1rem; font-weight:700; }
+    .tabs { display:flex; gap:10px; overflow-x:auto; padding:4px 2px 16px; scrollbar-width:thin; position:sticky; top:0; z-index:10; backdrop-filter:blur(10px); background:linear-gradient(180deg, rgba(5,8,22,.92), rgba(5,8,22,.62)); }
+    .tab { border:1px solid var(--border); background:rgba(15,23,42,.78); color:var(--text); padding:10px 14px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:.18s ease; font-weight:600; flex:0 0 auto; }
+    .tab:hover { transform:translateY(-1px); border-color:rgba(167,139,250,.35); }
+    .tab.active { background:linear-gradient(135deg, rgba(124,58,237,.95), rgba(167,139,250,.9)); border-color:transparent; color:#fff; box-shadow:0 10px 30px rgba(124,58,237,.25); }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 14px; }
+    .section-head h2 { margin:0; font-size:1.3rem; letter-spacing:-.03em; }
+    .section-head .count { color:var(--muted); font-size:.95rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px; content-visibility:auto; contain-intrinsic-size:1200px; }
+    .card { background:linear-gradient(180deg, rgba(17,24,39,.95), rgba(15,23,42,.9)); border:1px solid var(--border); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; min-height:420px; display:flex; flex-direction:column; }
+    .poster-shell { position:relative; aspect-ratio:2/3; background: radial-gradient(circle at top, rgba(167,139,250,.22), transparent 42%), linear-gradient(180deg, rgba(30,41,59,.85), rgba(2,6,23,.95)); border-bottom:1px solid var(--border); overflow:hidden; }
+    .poster-shell img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transform:scale(1.01); transition:opacity .2s ease, transform .2s ease; }
+    .poster-shell img.is-loaded { opacity:1; transform:scale(1); }
+    .poster-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; padding:18px; text-align:center; color:#cbd5e1; background: linear-gradient(180deg, rgba(2,6,23,.12), rgba(2,6,23,.55)), radial-gradient(circle at top, rgba(124,58,237,.20), transparent 36%); transition:opacity .2s ease; }
+    .poster-shell.has-image .poster-fallback { opacity:0; pointer-events:none; }
+    .poster-initials { width:76px; height:76px; border-radius:22px; border:1px solid rgba(167,139,250,.22); background:rgba(124,58,237,.16); display:grid; place-items:center; font-weight:800; font-size:1.35rem; letter-spacing:.04em; color:#ede9fe; box-shadow:inset 0 1px 0 rgba(255,255,255,.06); }
+    .poster-hint { font-size:.82rem; color:var(--muted); max-width:22ch; line-height:1.4; }
+    .card-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; flex:1; }
+    .card h3 { margin:0; font-size:1.05rem; letter-spacing:-.02em; line-height:1.25; }
+    .meta { color:var(--muted); font-size:.92rem; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { background:var(--chip); border:1px solid rgba(167,139,250,.18); color:#ddd6fe; border-radius:999px; padding:4px 8px; font-size:.78rem; font-weight:600; }
+    .badges { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px; }
+    .badge { border-radius:12px; padding:8px 8px; background:rgba(2,6,23,.55); border:1px solid var(--border); }
+    .badge .k { display:block; font-size:.7rem; color:var(--muted); margin-bottom:2px; }
+    .badge .v { font-weight:700; font-size:.96rem; }
+    .notes { margin-top:auto; color:#cbd5e1; font-size:.88rem; line-height:1.45; }
+    .footer-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin-top:2px; }
+    .poster-source { font-size:.74rem; color:#c4b5fd; border:1px solid rgba(167,139,250,.18); background:rgba(124,58,237,.12); border-radius:999px; padding:3px 8px; }
+    .empty, .loading, .error { background:rgba(15,23,42,.75); border:1px dashed var(--border); border-radius:18px; padding:22px; color:var(--muted); text-align:center; margin-top:18px; }
+    .error { color:#fca5a5; }
+    @media (max-width:640px) { .app { padding:16px; } .badges { grid-template-columns:1fr 1fr; } .stat { min-width:110px; } .card { min-height:390px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="title-block">
+        <h1>HiperList</h1>
+        <p>Catálogo em markdown com navegação por abas e carregamento de posters sob demanda. Os posters usam TMDB para filmes/séries e Jikan como fallback para anime.</p>
+      </div>
+      <div class="toolbar">
+        <button class="primary" id="configureToken" type="button">Configurar TMDB</button>
+        <button id="clearPosterCache" type="button">Limpar cache</button>
+      </div>
+      <div class="stats" id="stats"></div>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="Abas do catálogo"></nav>
+    <section id="content" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const mdPath = './movie-list.md';
+    const tmdbImageBase = 'https://image.tmdb.org/t/p/w500';
+    const posterPlaceholder = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#020617"/></linearGradient></defs><rect width="600" height="900" fill="url(#g)"/><rect x="60" y="60" width="480" height="780" rx="36" fill="rgba(124,58,237,0.12)" stroke="rgba(167,139,250,0.20)"/><text x="300" y="420" font-family="Arial, sans-serif" font-size="34" fill="#e2e8f0" text-anchor="middle">Poster indisponível</text></svg>`);
+
+    const state = { sections: [], activeKey: 'all', sectionCache: new Map(), posterCache: loadPosterCache(), posterRequests: new Map(), posterQueue: [], running: 0, tmdbToken: localStorage.getItem('hiperlist_tmdb_token') || '' };
+
+    const $tabs = document.getElementById('tabs');
+    const $content = document.getElementById('content');
+    const $stats = document.getElementById('stats');
+    const $configureToken = document.getElementById('configureToken');
+    const $clearPosterCache = document.getElementById('clearPosterCache');
+    let posterObserver = null;
+
+    const escapeHtml = (value = '') => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&quot;').replace(/'/g, '&#39;');
+
+    function parseRow(line) { const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, ''); return trimmed.split('|').map(cell => cell.trim()); }
+    function parseMarkdown(md) {
+      const lines = md.split(/\r?\n/); const sections = []; let current = null; let headers = null; let inTable = false;
+      for (const line of lines) {
+        const heading = line.match(/^##\s+(NÍVEL\s+\d+.*)$/);
+        if (heading) { current = { title: heading[1].trim(), items: [] }; sections.push(current); headers = null; inTable = false; continue; }
+        if (!current) continue;
+        if (/^\|\s*#\s*\|/.test(line)) { headers = parseRow(line); inTable = true; continue; }
+        if (inTable && /^\|/.test(line) && !/^\|\s*-+/.test(line)) { const row = parseRow(line); if (headers && row.length === headers.length) { const item = Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ''])); if (item['#']) current.items.push(item); } continue; }
+        if (inTable && line.trim() === '') continue;
+        if (inTable && !/^\|/.test(line)) { inTable = false; headers = null; }
+      }
+      return sections;
+    }
+
+    function loadPosterCache() { try { const raw = localStorage.getItem('hiperlist_poster_cache_v1'); const parsed = raw ? JSON.parse(raw) : {}; return parsed && typeof parsed === 'object' ? parsed : {}; } catch { return {}; } }
+    function savePosterCache() { try { localStorage.setItem('hiperlist_poster_cache_v1', JSON.stringify(state.posterCache)); } catch {} }
+    function normalizeKey({ title, year, kind }) { return [kind, String(year || ''), String(title || '').trim().toLowerCase()].join('::').replace(/\s+/g, ' '); }
+    function guessKind(item) { const media = (item['Midia'] || '').toLowerCase(); const type = item['Tipo'] || ''; if (media.includes('anime') || /\bAN\b/.test(type)) return 'anime'; if (media.includes('serie') || media.includes('série')) return 'tv'; return 'movie'; }
+    function getItemData(item) { return { title: item['Titulo'] || item['Título'] || '', year: Number.parseInt(item['Ano'], 10) || null, kind: guessKind(item), media: item['Midia'] || '', type: item['Tipo'] || '' }; }
+    function makeFallbackLabel(title = '') { const words = String(title).trim().split(/\s+/).filter(Boolean); const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase(); return initials || 'HL'; }
+
+    function enqueue(fn) { return new Promise((resolve, reject) => { state.posterQueue.push({ fn, resolve, reject }); pumpQueue(); }); }
+    function pumpQueue() { while (state.running < 4 && state.posterQueue.length) { const task = state.posterQueue.shift(); state.running += 1; Promise.resolve().then(task.fn).then(task.resolve, task.reject).finally(() => { state.running -= 1; pumpQueue(); }); } }
+    async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 10000) { const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs); try { const response = await fetch(url, { ...options, signal: controller.signal, cache: 'force-cache' }); if (!response.ok) return null; return await response.json(); } finally { clearTimeout(timeout); } }
+
+    function chooseBestTmdbResult(results, title, year) { if (!Array.isArray(results) || results.length === 0) return null; const normalizedTitle = title.trim().toLowerCase(); const scored = results.map(result => { const resultTitle = String(result.title || result.name || result.original_title || result.original_name || '').trim().toLowerCase(); const release = String(result.release_date || result.first_air_date || '').slice(0, 4); let score = 0; if (resultTitle === normalizedTitle) score += 100; else if (resultTitle.includes(normalizedTitle) || normalizedTitle.includes(resultTitle)) score += 40; if (year && release && Number(release) === year) score += 30; if (result.poster_path) score += 15; if (result.popularity) score += Math.min(10, Math.log10(Number(result.popularity) + 1)); return { result, score }; }); scored.sort((a, b) => b.score - a.score); return scored[0]?.result || null; }
+    async function fetchTmdbPoster({ title, year, kind }) {
+      if (!state.tmdbToken) return null;
+      const endpoint = kind === 'tv' ? 'search/tv' : 'search/movie';
+      const params = new URLSearchParams({ query: title, language: 'pt-BR', include_adult: 'false' });
+      if (kind === 'movie' && year) params.set('year', String(year));
+      if (kind === 'tv' && year) params.set('first_air_date_year', String(year));
+      const data = await fetchJsonWithTimeout(`https://api.themoviedb.org/3/${endpoint}?${params.toString()}`, { headers: { accept: 'application/json', Authorization: `Bearer ${state.tmdbToken}` } });
+      const best = chooseBestTmdbResult(data?.results || [], title, year);
+      if (!best || !best.poster_path) return null;
+      return { url: `${tmdbImageBase}${best.poster_path}`, source: 'TMDB', title: best.title || best.name || title };
+    }
+
+    function chooseBestJikanResult(results, title, year) { if (!Array.isArray(results) || results.length === 0) return null; const normalizedTitle = title.trim().toLowerCase(); const scored = results.map(result => { const resultTitle = String(result.title || result.title_english || result.title_japanese || '').trim().toLowerCase(); const aired = String(result.aired?.prop?.from?.year || result.aired?.from || '').slice(0, 4); let score = 0; if (resultTitle === normalizedTitle) score += 100; else if (resultTitle.includes(normalizedTitle) || normalizedTitle.includes(resultTitle)) score += 40; if (year && aired && Number(aired) === year) score += 30; if (result.images?.webp?.large_image_url || result.images?.jpg?.large_image_url) score += 15; return { result, score }; }); scored.sort((a, b) => b.score - a.score); return scored[0]?.result || null; }
+    async function fetchJikanPoster({ title, year }) {
+      const params = new URLSearchParams({ q: title, limit: '5', sfw: 'true' });
+      const data = await fetchJsonWithTimeout(`https://api.jikan.moe/v4/anime?${params.toString()}`);
+      const best = chooseBestJikanResult(data?.data || [], title, year);
+      if (!best) return null;
+      const url = best.images?.webp?.large_image_url || best.images?.jpg?.large_image_url || best.images?.webp?.image_url || best.images?.jpg?.image_url || null;
+      if (!url) return null;
+      return { url, source: 'Jikan', title: best.title || title };
+    }
+
+    async function resolvePosterForItem(item) {
+      const data = getItemData(item); const cacheKey = normalizeKey(data);
+      if (state.posterCache[cacheKey]) return state.posterCache[cacheKey];
+      if (state.posterRequests.has(cacheKey)) return state.posterRequests.get(cacheKey);
+      const promise = enqueue(async () => {
+        let result = null;
+        try { result = data.kind === 'anime' ? await fetchJikanPoster(data) : await fetchTmdbPoster(data); } catch (error) { console.warn('Poster lookup failed:', data.title, error); }
+        const value = result || { url: posterPlaceholder, source: 'Fallback', title: data.title };
+        state.posterCache[cacheKey] = value; savePosterCache(); return value;
+      });
+      state.posterRequests.set(cacheKey, promise);
+      promise.finally(() => state.posterRequests.delete(cacheKey));
+      return promise;
+    }
+
+    function buildStats(sections) { const total = sections.reduce((sum, s) => sum + s.items.length, 0); $stats.innerHTML = `<div class="stat"><span class="label">Seções</span><span class="value">${sections.length}</span></div><div class="stat"><span class="label">Mídias</span><span class="value">${total}</span></div><div class="stat"><span class="label">Poster cache</span><span class="value">${Object.keys(state.posterCache).length}</span></div>`; }
+    function renderTabs(sections) { const allCount = sections.reduce((sum, s) => sum + s.items.length, 0); const tabs = [{ key: 'all', title: 'Todas', count: allCount }, ...sections.map((s, i) => ({ key: String(i), title: s.title, count: s.items.length }))]; $tabs.innerHTML = tabs.map(tab => `<button class="tab ${tab.key === state.activeKey ? 'active' : ''}" data-key="${escapeHtml(tab.key)}" type="button">${escapeHtml(tab.title)} <span style="opacity:.7">(${tab.count})</span></button>`).join(''); }
+    function cardTemplate(item) {
+      const title = item['Titulo'] || ''; const year = item['Ano'] || ''; const media = item['Midia'] || ''; const notes = item['Notas'] || ''; const typeTags = (item['Tipo'] || '').split(',').map(s => s.trim()).filter(Boolean); const recTags = (item['REC'] || '').split(',').map(s => s.trim()).filter(Boolean); const initials = makeFallbackLabel(title);
+      const badges = [['EROT', item['EROT']], ['EXPL', item['EXPL']], ['PROF', item['PROF']], ['PERT', item['PERT']], ['TABU', item['TABU']], ['RARI', item['RARI']], ['CULT', item['CULT']]];
+      return `<article class="card"><div class="poster-shell"><img class="poster" alt="Poster de ${escapeHtml(title)}" data-poster="1" data-title="${escapeHtml(title)}" data-year="${escapeHtml(year)}" data-media="${escapeHtml(media)}" data-type="${escapeHtml(item['Tipo'] || '')}" /><div class="poster-fallback"><div class="poster-initials">${escapeHtml(initials)}</div><div class="poster-hint">Carregando capa sob demanda.</div></div></div><div class="card-body"><h3>${escapeHtml(title)}</h3><div class="meta"><span>${escapeHtml(year)}</span><span>•</span><span>${escapeHtml(media)}</span></div><div class="chips">${typeTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="badges">${badges.map(([k, v]) => `<div class="badge"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></div>`).join('')}</div><div class="chips">${recTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="footer-row"><div class="poster-source" data-poster-source>aguardando</div></div><div class="notes">${escapeHtml(notes)}</div></div></article>`;
+    }
+
+    function attachPosterObserver() { if (posterObserver) posterObserver.disconnect(); posterObserver = new IntersectionObserver((entries) => { for (const entry of entries) { if (!entry.isIntersecting) continue; const img = entry.target; posterObserver.unobserve(img); loadPosterIntoImage(img); } }, { root: null, rootMargin: '600px 0px', threshold: 0.01 }); document.querySelectorAll('img[data-poster="1"]').forEach(img => posterObserver.observe(img)); }
+    async function loadPosterIntoImage(img) {
+      const card = img.closest('.card'); if (!card || img.dataset.loaded === '1') return;
+      const item = { Titulo: img.dataset.title || '', Ano: img.dataset.year || '', Midia: img.dataset.media || '', Tipo: img.dataset.type || '' };
+      const sourceLabel = card.querySelector('[data-poster-source]');
+      try {
+        const poster = await resolvePosterForItem(item);
+        if (poster?.url) {
+          img.src = poster.url;
+          img.alt = `Poster de ${item.Titulo}`;
+          img.addEventListener('load', () => { card.querySelector('.poster-shell')?.classList.add('has-image'); img.classList.add('is-loaded'); }, { once: true });
+          img.addEventListener('error', () => { img.src = posterPlaceholder; }, { once: true });
+          if (sourceLabel) sourceLabel.textContent = poster.source === 'Fallback' ? 'sem poster' : poster.source;
+        } else { img.src = posterPlaceholder; if (sourceLabel) sourceLabel.textContent = 'sem poster'; }
+      } catch (error) { console.warn(error); img.src = posterPlaceholder; if (sourceLabel) sourceLabel.textContent = 'sem poster'; }
+      finally { img.dataset.loaded = '1'; }
+    }
+
+    function renderSection(sections, key) {
+      const cacheKey = key;
+      if (state.sectionCache.has(cacheKey)) { $content.innerHTML = state.sectionCache.get(cacheKey); attachPosterObserver(); return; }
+      let html = '';
+      if (key === 'all') { const items = sections.flatMap((s) => s.items); html = `<div class="section-head"><h2>Todas as mídias</h2><div class="count">${items.length} itens</div></div><div class="grid">${items.map(item => cardTemplate(item)).join('')}</div>`; }
+      else { const section = sections[Number(key)]; html = `<div class="section-head"><h2>${escapeHtml(section.title)}</h2><div class="count">${section.items.length} itens</div></div><div class="grid">${section.items.map(item => cardTemplate(item)).join('')}</div>`; }
+      state.sectionCache.set(cacheKey, html); $content.innerHTML = html; attachPosterObserver();
+    }
+
+    function setActive(key) { state.activeKey = key; renderTabs(state.sections); renderSection(state.sections, key); }
+    async function init() { $content.innerHTML = '<div class="loading">Carregando catálogo...</div>'; try { const res = await fetch(mdPath, { cache: 'force-cache' }); if (!res.ok) throw new Error(`Não foi possível carregar ${mdPath}`); const md = await res.text(); state.sections = parseMarkdown(md); buildStats(state.sections); renderTabs(state.sections); renderSection(state.sections, state.activeKey); } catch (err) { console.error(err); $content.innerHTML = '<div class="error">Não consegui ler o arquivo markdown. Coloque <strong>movie-list.md</strong> na mesma pasta do <strong>index.html</strong>.</div>'; } }
+
+    $tabs.addEventListener('click', (event) => { const btn = event.target.closest('.tab'); if (!btn) return; setActive(btn.dataset.key); });
+    $configureToken.addEventListener('click', () => { const current = state.tmdbToken || ''; const token = prompt('Cole seu TMDB v4 Read Access Token. Ele será salvo apenas neste navegador.', current); if (token === null) return; const cleaned = token.trim(); state.tmdbToken = cleaned; if (cleaned) { localStorage.setItem('hiperlist_tmdb_token', cleaned); alert('Token salvo. Recarregue a página para começar a buscar posters via TMDB.'); } else { localStorage.removeItem('hiperlist_tmdb_token'); alert('Token removido.'); } });
+    $clearPosterCache.addEventListener('click', () => { if (!confirm('Limpar o cache de posters deste navegador?')) return; state.posterCache = {}; state.sectionCache.clear(); savePosterCache(); buildStats(state.sections); renderSection(state.sections, state.activeKey); });
+    init();
+  </script>
+</body>
+</html>
