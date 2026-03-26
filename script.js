@@ -21,6 +21,15 @@ const $clearPosterCache = document.getElementById('clearPosterCache');
 
 let posterObserver = null;
 
+// ── CARD MODAL STATE ──
+const cmState = {
+  item: null,
+  results: [],       // lista de resultados TMDB/Jikan
+  resultIdx: 0,      // índice atual na lista
+  customUrl: null,   // poster manual do usuário
+  listChoice: null,  // 'watched' | 'want' | null
+};
+
 const escapeHtml = (value = '') => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&quot;').replace(/'/g, '&#39;');
 
 function parseRow(line) {
@@ -232,6 +241,342 @@ async function resolvePosterForItem(item) {
   return promise;
 }
 
+// ══════════════════════════════════════════════
+//  CARD MODAL
+// ══════════════════════════════════════════════
+
+const CRITERIA_CM = {
+  filme:[{key:'roteiro',label:'Roteiro'},{key:'direcao',label:'Direção'},{key:'atuacao',label:'Atuações'},{key:'trilha',label:'Trilha sonora'},{key:'impacto',label:'Impacto emocional'}],
+  serie:[{key:'roteiro',label:'Roteiro'},{key:'personagens',label:'Personagens'},{key:'ritmo',label:'Ritmo'},{key:'atuacao',label:'Atuações'},{key:'vicio',label:'Fator viciante'}],
+  anime:[{key:'historia',label:'História'},{key:'personagens',label:'Personagens'},{key:'animacao',label:'Animação'},{key:'trilha',label:'Trilha/OST'},{key:'emocao',label:'Impacto emocional'}],
+};
+
+function cmGuessType(item){
+  const m=(item['Midia']||'').toLowerCase();
+  if(m.includes('anime'))return'anime';
+  if(m.includes('serie')||m.includes('série'))return'serie';
+  return'filme';
+}
+
+function cmCalcScore(form){
+  const sliders=[...form.querySelectorAll('input[type=range]')];
+  if(!sliders.length)return null;
+  const avg=sliders.reduce((a,s)=>a+Number(s.value),0)/sliders.length;
+  return avg.toFixed(1);
+}
+
+function cmLoadStorage(key,fb){try{return JSON.parse(localStorage.getItem(key))??fb;}catch{return fb;}}
+function cmSaveStorage(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
+function cmGenId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+function buildCardModal(){
+  if(document.getElementById('cmOverlay'))return;
+  const el=document.createElement('div');
+  el.className='cm-overlay';
+  el.id='cmOverlay';
+  el.innerHTML=`
+<div class="cm-box" id="cmBox">
+  <div class="cm-poster-col">
+    <div class="cm-poster-wrap" id="cmPosterWrap" title="Clique para trocar foto">
+      <img id="cmPosterImg" src="" alt="Poster"/>
+      <div class="cm-poster-overlay">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 11l3-3 2 2 3-4 4 5H2z"/><circle cx="5.5" cy="5.5" r="1.5"/><rect x="1" y="1" width="14" height="14" rx="3"/></svg>
+        Trocar imagem
+      </div>
+    </div>
+    <div class="cm-poster-arrows">
+      <button class="cm-arr" id="cmArrPrev">&#8592; Anterior</button>
+      <button class="cm-arr" id="cmArrNext">Próximo &#8594;</button>
+    </div>
+    <div class="cm-poster-src" id="cmPosterSrc"></div>
+    <div class="cm-poster-input-row">
+      <label class="cm-label" style="padding:0">Ou cole um link</label>
+      <div style="display:flex;gap:6px">
+        <input class="cm-link-input" id="cmLinkInput" placeholder="https://..."/>
+        <button class="cm-link-btn" id="cmLinkBtn">Usar</button>
+      </div>
+    </div>
+    <input type="file" id="cmFileInput" accept="image/*" style="display:none"/>
+  </div>
+  <div class="cm-right" id="cmRight">
+    <button class="cm-close" id="cmClose">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="cm-title" id="cmTitle"></div>
+    <div class="cm-meta" id="cmMeta"></div>
+    <div class="cm-section">
+      <div class="cm-label">Adicionar à lista</div>
+      <div class="cm-list-btns">
+        <button class="cm-list-btn" id="cmBtnWant">📋 Quero ver</button>
+        <button class="cm-list-btn" id="cmBtnWatched">✅ Já vi</button>
+      </div>
+    </div>
+    <div id="cmWantForm" class="cm-want-form" style="display:none">
+      <div class="cm-section"><div class="cm-label">Prioridade</div>
+        <select class="cm-select" id="cmPriority">
+          <option value="alta">🔴 Alta</option>
+          <option value="media" selected>🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+      </div>
+      <div class="cm-section"><div class="cm-label">Anotação</div>
+        <textarea class="cm-textarea" id="cmWantNotes" placeholder="Por que quer assistir?"></textarea>
+      </div>
+      <button class="cm-save-btn" id="cmSaveWant">Salvar na lista</button>
+    </div>
+    <div id="cmWatchedForm" class="cm-watched-form" style="display:none">
+      <div class="cm-row">
+        <div class="cm-section"><div class="cm-label">Data início</div><input class="cm-input" id="cmDateStart" type="date"/></div>
+        <div class="cm-section"><div class="cm-label">Data fim</div><input class="cm-input" id="cmDateEnd" type="date"/></div>
+      </div>
+      <div class="cm-section">
+        <div class="cm-label" style="display:flex;justify-content:space-between;align-items:center">
+          Avaliação <span class="cm-score-badge" id="cmScoreBadge">— / 10</span>
+        </div>
+        <div class="cm-criteria" id="cmCriteria"></div>
+      </div>
+      <div class="cm-section"><div class="cm-label">Notas pessoais</div>
+        <textarea class="cm-textarea" id="cmWatchedNotes" placeholder="Impressões, spoilers…"></textarea>
+      </div>
+      <button class="cm-save-btn" id="cmSaveWatched">Salvar como assistido</button>
+    </div>
+  </div>
+</div>`;
+  document.body.appendChild(el);
+
+  // fechar
+  document.getElementById('cmClose').onclick=()=>el.classList.remove('open');
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+
+  // trocar lista
+  document.getElementById('cmBtnWant').onclick=()=>cmToggleList('want');
+  document.getElementById('cmBtnWatched').onclick=()=>cmToggleList('watched');
+
+  // setas poster
+  document.getElementById('cmArrPrev').onclick=()=>cmStepPoster(-1);
+  document.getElementById('cmArrNext').onclick=()=>cmStepPoster(1);
+
+  // upload clique no poster
+  document.getElementById('cmPosterWrap').onclick=()=>document.getElementById('cmFileInput').click();
+  document.getElementById('cmFileInput').onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{cmState.customUrl=ev.target.result;cmSetPosterImg(ev.target.result,'Upload');};
+    r.readAsDataURL(f);
+  };
+
+  // link manual
+  document.getElementById('cmLinkBtn').onclick=()=>{
+    const url=document.getElementById('cmLinkInput').value.trim();
+    if(!url)return;
+    cmState.customUrl=url;
+    cmSetPosterImg(url,'Link');
+    document.getElementById('cmLinkInput').value='';
+  };
+
+  // sliders → score ao vivo
+  document.getElementById('cmCriteria').addEventListener('input',e=>{
+    if(e.target.type!=='range')return;
+    e.target.previousElementSibling.textContent=e.target.value;
+    cmUpdateScore();
+  });
+
+  // salvar quero ver
+  document.getElementById('cmSaveWant').onclick=cmSaveWant;
+  // salvar já vi
+  document.getElementById('cmSaveWatched').onclick=cmSaveWatched;
+}
+
+function cmToggleList(choice){
+  const wantBtn=document.getElementById('cmBtnWant');
+  const watchBtn=document.getElementById('cmBtnWatched');
+  const wantForm=document.getElementById('cmWantForm');
+  const watchedForm=document.getElementById('cmWatchedForm');
+
+  if(cmState.listChoice===choice){
+    // desmarcar
+    cmState.listChoice=null;
+    wantBtn.classList.remove('active-want');
+    watchBtn.classList.remove('active-watched');
+    wantForm.style.display='none';
+    watchedForm.style.display='none';
+    return;
+  }
+  cmState.listChoice=choice;
+  wantBtn.classList.toggle('active-want',choice==='want');
+  watchBtn.classList.toggle('active-watched',choice==='watched');
+  wantForm.style.display=choice==='want'?'flex':'none';
+  watchedForm.style.display=choice==='watched'?'flex':'none';
+  if(choice==='watched')cmBuildCriteria();
+}
+
+function cmBuildCriteria(){
+  const type=cmGuessType(cmState.item||{});
+  const list=CRITERIA_CM[type]||CRITERIA_CM.filme;
+  const container=document.getElementById('cmCriteria');
+  container.innerHTML=list.map(c=>`
+    <div class="cm-crit-row">
+      <span>${c.label}</span>
+      <span class="cm-crit-val">${7}</span>
+      <input type="range" min="0" max="10" step="0.5" value="7" data-key="${c.key}" style="width:100%"/>
+    </div>`).join('');
+  cmUpdateScore();
+}
+
+function cmUpdateScore(){
+  const sliders=[...document.querySelectorAll('#cmCriteria input[type=range]')];
+  if(!sliders.length)return;
+  const avg=(sliders.reduce((a,s)=>a+Number(s.value),0)/sliders.length).toFixed(1);
+  const badge=document.getElementById('cmScoreBadge');
+  badge.textContent=`${avg} / 10`;
+  const n=Number(avg);
+  badge.style.color=n>=8?'#6ee7b7':n>=5?'#fcd34d':'#fca5a5';
+}
+
+function cmSetPosterImg(url,source){
+  const img=document.getElementById('cmPosterImg');
+  img.src=url;
+  document.getElementById('cmPosterSrc').textContent=source||'';
+}
+
+async function cmStepPoster(dir){
+  const results=cmState.results;
+  if(!results.length)return;
+  cmState.customUrl=null;
+  cmState.resultIdx=(cmState.resultIdx+dir+results.length)%results.length;
+  const r=results[cmState.resultIdx];
+  const url=r.poster_path?`${tmdbImageBase}${r.poster_path}`:(r.images?.webp?.large_image_url||r.images?.jpg?.large_image_url||posterPlaceholder);
+  cmSetPosterImg(url,`TMDB ${cmState.resultIdx+1}/${results.length}`);
+  document.getElementById('cmArrPrev').disabled=false;
+  document.getElementById('cmArrNext').disabled=false;
+}
+
+async function cmFetchAllResults(item){
+  const data=getItemData(item);
+  cmState.results=[];
+  cmState.resultIdx=0;
+  try{
+    if(data.kind==='anime'){
+      const params=new URLSearchParams({q:data.title,limit:'10',sfw:'true'});
+      const d=await fetchJsonWithTimeout(`https://api.jikan.moe/v4/anime?${params}`);
+      cmState.results=(d?.data||[]).filter(r=>r.images?.jpg?.large_image_url||r.images?.webp?.large_image_url);
+    } else if(state.tmdbToken){
+      const endpoint=data.kind==='tv'?'search/tv':'search/movie';
+      const params=new URLSearchParams({query:data.title,language:'pt-BR',include_adult:'false'});
+      if(data.year)params.set(data.kind==='tv'?'first_air_date_year':'year',String(data.year));
+      const d=await fetchJsonWithTimeout(`https://api.themoviedb.org/3/${endpoint}?${params}`,{headers:{accept:'application/json',Authorization:`Bearer ${state.tmdbToken}`}});
+      cmState.results=(d?.results||[]).filter(r=>r.poster_path);
+    }
+  }catch(e){console.warn('cmFetchAllResults',e);}
+  const prevBtn=document.getElementById('cmArrPrev');
+  const nextBtn=document.getElementById('cmArrNext');
+  if(prevBtn){prevBtn.disabled=cmState.results.length<2;nextBtn.disabled=cmState.results.length<2;}
+}
+
+async function openCardModal(item){
+  buildCardModal();
+  cmState.item=item;
+  cmState.listChoice=null;
+  cmState.customUrl=null;
+  cmState.results=[];
+  cmState.resultIdx=0;
+
+  // reset UI
+  document.getElementById('cmBtnWant').classList.remove('active-want');
+  document.getElementById('cmBtnWatched').classList.remove('active-watched');
+  document.getElementById('cmWantForm').style.display='none';
+  document.getElementById('cmWatchedForm').style.display='none';
+  document.getElementById('cmWantNotes').value='';
+  document.getElementById('cmWatchedNotes').value='';
+  document.getElementById('cmDateStart').value='';
+  document.getElementById('cmDateEnd').value='';
+  document.getElementById('cmScoreBadge').textContent='— / 10';
+  document.getElementById('cmCriteria').innerHTML='';
+  document.getElementById('cmArrPrev').disabled=true;
+  document.getElementById('cmArrNext').disabled=true;
+
+  const title=item['Titulo']||'';
+  const year=item['Ano']||'';
+  const media=item['Midia']||'';
+  document.getElementById('cmTitle').textContent=title;
+  document.getElementById('cmMeta').innerHTML=`<span>${year}</span>${year?'<span>•</span>':''}  <span>${media}</span>`;
+
+  // poster atual do card
+  const cardImg=document.querySelector(`img[data-title="${CSS.escape(title)}"]`);
+  const currentSrc=cardImg?.src&&!cardImg.src.includes('data:image/svg')?cardImg.src:posterPlaceholder;
+  cmSetPosterImg(currentSrc,'atual');
+
+  document.getElementById('cmOverlay').classList.add('open');
+
+  // busca todos os resultados em paralelo (sem bloquear a abertura)
+  cmFetchAllResults(item).then(()=>{
+    if(cmState.results.length&&!cmState.customUrl){
+      cmState.resultIdx=0;
+      const r=cmState.results[0];
+      const url=r.poster_path?`${tmdbImageBase}${r.poster_path}`:(r.images?.webp?.large_image_url||r.images?.jpg?.large_image_url||posterPlaceholder);
+      cmSetPosterImg(url,`TMDB 1/${cmState.results.length}`);
+      document.getElementById('cmArrPrev').disabled=cmState.results.length<2;
+      document.getElementById('cmArrNext').disabled=cmState.results.length<2;
+    }
+  });
+}
+
+function cmCurrentPosterUrl(){
+  if(cmState.customUrl)return cmState.customUrl;
+  return document.getElementById('cmPosterImg').src||'';
+}
+
+function cmSaveWant(){
+  const item=cmState.item; if(!item)return;
+  const title=item['Titulo']||'';
+  const year=item['Ano']||'';
+  const type=cmGuessType(item);
+  const priority=document.getElementById('cmPriority').value;
+  const notes=document.getElementById('cmWantNotes').value.trim();
+  let list=cmLoadStorage('hl_wantlist_v1',[]);
+  const exists=list.findIndex(i=>i.title.toLowerCase()===title.toLowerCase());
+  const entry={id:exists>=0?list[exists].id:cmGenId(),title,type,year,priority,notes};
+  if(exists>=0)list[exists]=entry; else list.push(entry);
+  cmSaveStorage('hl_wantlist_v1',list);
+  cmConfirm('Adicionado em "Quero ver" ✓');
+}
+
+function cmSaveWatched(){
+  const item=cmState.item; if(!item)return;
+  const title=item['Titulo']||'';
+  const year=item['Ano']||'';
+  const type=cmGuessType(item);
+  const dateStart=document.getElementById('cmDateStart').value;
+  const dateEnd=document.getElementById('cmDateEnd').value;
+  const notes=document.getElementById('cmWatchedNotes').value.trim();
+  const sliders=[...document.querySelectorAll('#cmCriteria input[type=range]')];
+  const ratings=Object.fromEntries(sliders.map(s=>[s.dataset.key,+s.value]));
+  let list=cmLoadStorage('hl_watched_v1',[]);
+  const exists=list.findIndex(i=>i.title.toLowerCase()===title.toLowerCase());
+  const entry={id:exists>=0?list[exists].id:cmGenId(),title,type,year,ratings,notes,
+    dateWatched:type==='filme'?dateEnd:'',dateStart,dateEnd};
+  if(exists>=0)list[exists]=entry; else list.push(entry);
+  cmSaveStorage('hl_watched_v1',list);
+  // salva poster customizado no cache
+  if(cmState.customUrl){
+    const cacheKey=normalizeKey({title,year:Number.parseInt(year)||null,kind:guessKind(item)});
+    state.posterCache[cacheKey]={url:cmState.customUrl,source:'Custom',title};
+    savePosterCache();
+    // atualiza o card na página
+    const cardImg=document.querySelector(`img[data-title="${CSS.escape(title)}"]`);
+    if(cardImg){cardImg.src=cmState.customUrl;cardImg.classList.add('is-loaded');cardImg.closest('.poster-shell')?.classList.add('has-image');}
+  }
+  cmConfirm('Salvo em "Já vi" ✓');
+}
+
+function cmConfirm(msg){
+  const btn=document.getElementById(cmState.listChoice==='want'?'cmSaveWant':'cmSaveWatched');
+  const orig=btn.textContent;
+  btn.textContent=msg;
+  btn.style.background='linear-gradient(135deg,#059669,#34d399)';
+  setTimeout(()=>{btn.textContent=orig;btn.style.background='';},2000);
+}
+
 function buildStats(sections) {
   const total = sections.reduce((sum, s) => sum + s.items.length, 0);
   $stats.innerHTML = `<div class="stat"><span class="label">Seções</span><span class="value">${sections.length}</span></div><div class="stat"><span class="label">Mídias</span><span class="value">${total}</span></div><div class="stat"><span class="label">Poster cache</span><span class="value">${Object.keys(state.posterCache).length}</span></div>`;
@@ -265,7 +610,7 @@ function cardTemplate(item) {
     ['CULT', item['CULT']]
   ];
 
-  return `<article class="card"><div class="poster-shell"><img class="poster" alt="Poster de ${escapeHtml(title)}" data-poster="1" data-title="${escapeHtml(title)}" data-year="${escapeHtml(year)}" data-media="${escapeHtml(media)}" data-type="${escapeHtml(item['Tipo'] || '')}" /><div class="poster-fallback"><div class="poster-initials">${escapeHtml(initials)}</div><div class="poster-hint">Carregando capa sob demanda.</div></div></div><div class="card-body"><h3>${escapeHtml(title)}</h3><div class="meta"><span>${escapeHtml(year)}</span><span>•</span><span>${escapeHtml(media)}</span></div><div class="chips">${typeTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="badges">${badges.map(([k, v]) => `<div class="badge"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></div>`).join('')}</div><div class="chips">${recTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="footer-row"><div class="poster-source" data-poster-source>aguardando</div></div><div class="notes">${escapeHtml(notes)}</div></div></article>`;
+  return `<article class="card" style="cursor:pointer"><div class="poster-shell"><div class="poster-shell"><img class="poster" alt="Poster de ${escapeHtml(title)}" data-poster="1" data-title="${escapeHtml(title)}" data-year="${escapeHtml(year)}" data-media="${escapeHtml(media)}" data-type="${escapeHtml(item['Tipo'] || '')}" /><div class="poster-fallback"><div class="poster-initials">${escapeHtml(initials)}</div><div class="poster-hint">Carregando capa sob demanda.</div></div></div><div class="card-body"><h3>${escapeHtml(title)}</h3><div class="meta"><span>${escapeHtml(year)}</span><span>•</span><span>${escapeHtml(media)}</span></div><div class="chips">${typeTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="badges">${badges.map(([k, v]) => `<div class="badge"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></div>`).join('')}</div><div class="chips">${recTags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="footer-row"><div class="poster-source" data-poster-source>aguardando</div></div><div class="notes">${escapeHtml(notes)}</div></div></article>`;
 }
 
 function attachPosterObserver() {
@@ -279,6 +624,18 @@ function attachPosterObserver() {
     }
   }, { root: null, rootMargin: '600px 0px', threshold: 0.01 });
   document.querySelectorAll('img[data-poster="1"]').forEach(img => posterObserver.observe(img));
+  document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    const img=card.querySelector('img[data-poster]');
+    const item={
+      Titulo:img?.dataset.title||'',
+      Ano:img?.dataset.year||'',
+      Midia:img?.dataset.media||'',
+      Tipo:img?.dataset.type||''
+    };
+    openCardModal(item);
+  });
+});
 }
 
 async function loadPosterIntoImage(img) {
