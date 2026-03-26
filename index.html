@@ -121,7 +121,7 @@
 
     function enqueue(fn) { return new Promise((resolve, reject) => { state.posterQueue.push({ fn, resolve, reject }); pumpQueue(); }); }
     function pumpQueue() { while (state.running < 4 && state.posterQueue.length) { const task = state.posterQueue.shift(); state.running += 1; Promise.resolve().then(task.fn).then(task.resolve, task.reject).finally(() => { state.running -= 1; pumpQueue(); }); } }
-    async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 10000) { const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs); try { const response = await fetch(url, { ...options, signal: controller.signal, cache: 'force-cache' }); if (!response.ok) return null; return await response.json(); } finally { clearTimeout(timeout); } }
+    async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 10000) { const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs); try { const response = await fetch(url, { ...options, signal: controller.signal }); if (!response.ok) return null; return await response.json(); } finally { clearTimeout(timeout); } }
 
     function chooseBestTmdbResult(results, title, year) { if (!Array.isArray(results) || results.length === 0) return null; const normalizedTitle = title.trim().toLowerCase(); const scored = results.map(result => { const resultTitle = String(result.title || result.name || result.original_title || result.original_name || '').trim().toLowerCase(); const release = String(result.release_date || result.first_air_date || '').slice(0, 4); let score = 0; if (resultTitle === normalizedTitle) score += 100; else if (resultTitle.includes(normalizedTitle) || normalizedTitle.includes(resultTitle)) score += 40; if (year && release && Number(release) === year) score += 30; if (result.poster_path) score += 15; if (result.popularity) score += Math.min(10, Math.log10(Number(result.popularity) + 1)); return { result, score }; }); scored.sort((a, b) => b.score - a.score); return scored[0]?.result || null; }
     async function fetchTmdbPoster({ title, year, kind }) {
@@ -201,7 +201,31 @@
     async function init() { $content.innerHTML = '<div class="loading">Carregando catálogo...</div>'; try { const res = await fetch(mdPath, { cache: 'force-cache' }); if (!res.ok) throw new Error(`Não foi possível carregar ${mdPath}`); const md = await res.text(); state.sections = parseMarkdown(md); buildStats(state.sections); renderTabs(state.sections); renderSection(state.sections, state.activeKey); } catch (err) { console.error(err); $content.innerHTML = '<div class="error">Não consegui ler o arquivo markdown. Coloque <strong>movie-list.md</strong> na mesma pasta do <strong>index.html</strong>.</div>'; } }
 
     $tabs.addEventListener('click', (event) => { const btn = event.target.closest('.tab'); if (!btn) return; setActive(btn.dataset.key); });
-    $configureToken.addEventListener('click', () => { const current = state.tmdbToken || ''; const token = prompt('Cole seu TMDB v4 Read Access Token. Ele será salvo apenas neste navegador.', current); if (token === null) return; const cleaned = token.trim(); state.tmdbToken = cleaned; if (cleaned) { localStorage.setItem('hiperlist_tmdb_token', cleaned); alert('Token salvo. Recarregue a página para começar a buscar posters via TMDB.'); } else { localStorage.removeItem('hiperlist_tmdb_token'); alert('Token removido.'); } });
+    $configureToken.addEventListener('click', () => {
+      const current = state.tmdbToken || '';
+      const token = prompt('Cole seu TMDB v4 Read Access Token.\nEle será salvo apenas neste navegador.', current);
+      if (token === null) return;
+      const cleaned = token.trim();
+      state.tmdbToken = cleaned;
+      // Limpa todos os caches para que os posters sejam buscados com o novo token imediatamente
+      state.posterCache = {};
+      state.sectionCache.clear();
+      state.posterRequests.clear();
+      state.posterQueue.length = 0;
+      state.running = 0;
+      savePosterCache();
+      if (cleaned) {
+        localStorage.setItem('hiperlist_tmdb_token', cleaned);
+        buildStats(state.sections);
+        renderSection(state.sections, state.activeKey);
+        alert('Token salvo! Os posters estao sendo carregados agora.');
+      } else {
+        localStorage.removeItem('hiperlist_tmdb_token');
+        buildStats(state.sections);
+        renderSection(state.sections, state.activeKey);
+        alert('Token removido.');
+      }
+    });
     $clearPosterCache.addEventListener('click', () => { if (!confirm('Limpar o cache de posters deste navegador?')) return; state.posterCache = {}; state.sectionCache.clear(); savePosterCache(); buildStats(state.sections); renderSection(state.sections, state.activeKey); });
     init();
   </script>
