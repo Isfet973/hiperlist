@@ -1,0 +1,114 @@
+{
+  "system": {
+    "version": "1.0",
+    "description": "Sistema de classificação de mídias pessoais"
+  },
+
+  "categories": {
+    "contentMetrics": [
+      { "id": "ERO", "name": "Erotismo", "description": "Intensidade sensual e erótica" },
+      { "id": "EXPL", "name": "Explicitude", "description": "Nível gráfico das cenas" },
+      { "id": "PROF", "name": "Profundidade", "description": "Qualidade narrativa e emocional" },
+      { "id": "PERT", "name": "Perturbação", "description": "Desconforto psicológico causado" },
+      { "id": "TABU", "name": "Tabu", "description": "Presença de temas proibidos" },
+      { "id": "CULT", "name": "Valor Cultural", "description": "Importância artística e histórica" },
+      { "id": "RARI", "name": "Raridade", "description": "Dificuldade de acesso" }
+    ],
+
+    "identity": [
+      { "id": "L", "name": "Lésbico/Sáfico" },
+      { "id": "G", "name": "Gay Masculino" },
+      { "id": "T", "name": "Trans/Não-binário" },
+      { "id": "H", "name": "Hétero" },
+      { "id": "B", "name": "Bi/Pan/Fluido" }
+    ],
+
+    "genres": [
+      { "id": "DR", "name": "Drama" },
+      { "id": "RO", "name": "Romance" },
+      { "id": "TH", "name": "Thriller" },
+      { "id": "HR", "name": "Horror" },
+      { "id": "SF", "name": "Ficção Científica" },
+      { "id": "PH", "name": "Psicológico" },
+      { "id": "BH", "name": "Body Horror" },
+      { "id": "CR", "name": "Crime" },
+      { "id": "MY", "name": "Mistério" },
+      { "id": "C", "name": "Comédia" }
+    ],
+
+    "themes": [
+      { "id": "V", "name": "Voyeurismo" },
+      { "id": "R", "name": "Religião / Nunsploitation" },
+      { "id": "Z", "name": "Vampirismo" },
+      { "id": "XXX", "name": "Tabu Extremo" },
+      { "id": "X", "name": "Tabu" },
+      { "id": "EC", "name": "Ecchi" },
+      { "id": "HN", "name": "Hentai" }
+    ],
+
+    "origin": [
+      { "id": "JP", "name": "Japão" },
+      { "id": "FR", "name": "França" },
+      { "id": "IT", "name": "Itália" },
+      { "id": "BR", "name": "Brasil" },
+      { "id": "CN", "name": "China" },
+      { "id": "KR", "name": "Coreia" }
+    ],
+
+    "format": [
+      { "id": "MOVIE", "name": "Filme" },
+      { "id": "SERIES", "name": "Série" },
+      { "id": "HENTAI", "name": "Hentai" },
+      { "id": "PORN", "name": "Pornográfico" },
+      { "id": "ANIME", "name": "Anime" }
+    ],
+
+    "emotionalTone": [
+      { "id": "ML", "name": "Melancólico" },
+      { "id": "TR", "name": "Trágico" },
+      { "id": "CA", "name": "Coming-of-Age" },
+      { "id": "CT", "name": "Cutting-Urge" },
+      { "id": "IT", "name": "Impactante" }
+    ],
+
+    "levels": [
+      { "level": 1, "name": "Sutil" },
+      { "level": 2, "name": "Erótico" },
+      { "level": 3, "name": "Muito Erótico" },
+      { "level": 4, "name": "Altamente Explícito" },
+      { "level": 5, "name": "Fronteira Pornô" },
+      { "level": 6, "name": "Pornô" }
+    ]
+  },
+
+  "mediaExample": {
+    "id": "movie_001",
+    "title": "Exemplo",
+    "year": 2020,
+
+    "type": "MOVIE",
+    "genres": ["DR", "PH"],
+    "themes": ["V"],
+    "identity": ["B"],
+    "origin": ["FR"],
+
+    "status": "watchlist",
+
+    "userRating": null,
+
+    "userMetrics": {
+      "EROT": null,
+      "EXPL": null,
+      "PROF": null,
+      "PERT": null,
+      "TABU": null,
+      "CULT": null,
+      "RARI": null
+    },
+
+    "level": null,
+    "emotionalTone": [],
+
+    "notes": ""
+  }
+}
