@@ -15,9 +15,10 @@
     .title-block h1 { margin:0; font-size:clamp(2rem,4vw,3.2rem); letter-spacing:-.04em; line-height:1; }
     .title-block p { margin:8px 0 0; color:var(--muted); max-width:72ch; }
     .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-end; }
-    .toolbar button { border:1px solid var(--border); background:rgba(15,23,42,.78); color:var(--text); padding:10px 14px; border-radius:999px; cursor:pointer; transition:.18s ease; font-weight:600; }
-    .toolbar button:hover { transform:translateY(-1px); border-color:rgba(167,139,250,.35); }
+    .toolbar button, .toolbar a { border:1px solid var(--border); background:rgba(15,23,42,.78); color:var(--text); padding:10px 14px; border-radius:999px; cursor:pointer; transition:.18s ease; font-weight:600; text-decoration:none; font-size:inherit; display:inline-flex; align-items:center; gap:8px; }
+    .toolbar button:hover, .toolbar a:hover { transform:translateY(-1px); border-color:rgba(167,139,250,.35); }
     .toolbar button.primary { background:linear-gradient(135deg, rgba(124,58,237,.95), rgba(167,139,250,.9)); border-color:transparent; color:#fff; box-shadow:0 10px 30px rgba(124,58,237,.25); }
+    .toolbar a.profile-btn { background:linear-gradient(135deg, rgba(124,58,237,.95), rgba(167,139,250,.9)); border-color:transparent; color:#fff; box-shadow:0 10px 30px rgba(124,58,237,.25); }
     .stats { display:flex; flex-wrap:wrap; gap:10px; }
     .stat { background:rgba(15,23,42,.75); border:1px solid var(--border); border-radius:16px; padding:10px 14px; box-shadow:var(--shadow); min-width:130px; }
     .stat .label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; }
@@ -63,6 +64,13 @@
         <p>Catálogo em markdown com navegação por abas e carregamento de posters sob demanda. Os posters usam TMDB para filmes/séries e Jikan como fallback para anime.</p>
       </div>
       <div class="toolbar">
+        <a class="profile-btn" href="./profile.html">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="8" cy="5" r="3"/>
+            <path d="M2 14c0-3 2.7-5 6-5s6 2 6 5" stroke-linecap="round"/>
+          </svg>
+          Meu Perfil
+        </a>
         <button class="primary" id="configureToken" type="button">Configurar TMDB</button>
         <button id="clearPosterCache" type="button">Limpar cache</button>
       </div>

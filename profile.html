@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>HiperList — Perfil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: #0e1017;
+      --surface-2: #151820;
+      --surface-3: #1c2030;
+      --border: rgba(255,255,255,.07);
+      --border-hover: rgba(255,255,255,.14);
+      --text: #e8eaf0;
+      --muted: #6b7385;
+      --accent: #7c3aed;
+      --accent-2: #a78bfa;
+      --accent-glow: rgba(124,58,237,.35);
+      --gold: #f59e0b;
+      --green: #10b981;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --pink: #ec4899;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 20% -10%, rgba(124,58,237,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 80% 110%, rgba(59,130,246,.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ─── NAV ─── */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -.04em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: .85rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-back:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: var(--surface-2);
+    }
+    .btn-back svg { width: 14px; height: 14px; }
+
+    /* ─── PROFILE HEADER ─── */
+    .profile-header {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      margin-bottom: 56px;
+      flex-wrap: wrap;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar-ring {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      padding: 3px;
+      background: conic-gradient(from 180deg, var(--accent), var(--blue), var(--pink), var(--accent));
+      cursor: pointer;
+    }
+
+    .avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--surface-2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .avatar-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-placeholder {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 2rem;
+      color: var(--accent-2);
+      letter-spacing: -.04em;
+    }
+
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .2s;
+      font-size: .72rem;
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+    }
+    .avatar-ring:hover .avatar-overlay { opacity: 1; }
+
+    .avatar-upload { display: none; }
+
+    .profile-info { flex: 1; min-width: 220px; padding-top: 8px; }
+
+    .profile-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .profile-name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: -.04em;
+      line-height: 1.1;
+      color: var(--text);
+      background: none;
+      border: none;
+      outline: none;
+      cursor: text;
+      width: auto;
+      min-width: 80px;
+      max-width: 100%;
+    }
+
+    .profile-name::placeholder { color: var(--muted); }
+
+    .btn-edit-name {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      transition: color .2s;
+    }
+    .btn-edit-name:hover { color: var(--accent-2); }
+    .btn-edit-name svg { width: 14px; height: 14px; }
+
+    .profile-meta {
+      color: var(--muted);
+      font-size: .88rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .meta-stat { display: flex; align-items: center; gap: 6px; }
+    .meta-stat strong { color: var(--text); font-weight: 600; }
+
+    /* ─── STATS ROW ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      transition: border-color .2s;
+    }
+    .stat-card:hover { border-color: var(--border-hover); }
+
+    .stat-label {
+      font-size: .72rem;
+      font-family: var(--font-display);
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.7rem;
+      letter-spacing: -.04em;
+      color: var(--text);
+    }
+
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.purple { color: var(--accent-2); }
+    .stat-value.green { color: var(--green); }
+
+    /* ─── MAIN TABS ─── */
+    .main-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 5px;
+      width: fit-content;
+    }
+
+    .main-tab {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .82rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      border-radius: 9px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .main-tab.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(124,58,237,.3);
+    }
+    .main-tab:not(.active):hover { color: var(--text); background: var(--surface-2); }
+
+    /* ─── SECTION HEADER ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -.02em;
+    }
+
+    .media-sub-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .sub-tab {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .75rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sub-tab.active {
+      background: var(--surface-3);
+      border-color: var(--accent);
+      color: var(--accent-2);
+    }
+    .sub-tab:not(.active):hover { color: var(--text); border-color: var(--border-hover); }
+
+    /* ─── MEDIA PANELS ─── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 2.4rem; margin-bottom: 12px; }
+    .empty-text { font-size: .9rem; }
+
+    /* ─── MEDIA GRID ─── */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    /* ─── MEDIA CARD ─── */
+    .media-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      position: relative;
+      transition: border-color .2s, transform .15s;
+      cursor: default;
+    }
+    .media-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .95rem;
+      letter-spacing: -.02em;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+    .btn-icon:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface-2); }
+    .btn-icon.danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-icon svg { width: 13px; height: 13px; }
+
+    .card-meta {
+      font-size: .78rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card-tag {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: .72rem;
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+
+    .card-tag.film { border-color: rgba(245,158,11,.3); color: var(--gold); }
+    .card-tag.serie { border-color: rgba(59,130,246,.3); color: var(--blue); }
+    .card-tag.anime { border-color: rgba(236,72,153,.3); color: var(--pink); }
+
+    .card-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .score-badge {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -.03em;
+      min-width: 44px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .score-badge.high { background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.3); color: var(--green); }
+    .score-badge.mid { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.25); color: var(--gold); }
+    .score-badge.low { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); color: var(--red); }
+    .score-badge.none { color: var(--muted); }
+
+    .score-stars { display: flex; gap: 2px; }
+    .star { font-size: .85rem; }
+    .star.filled { color: var(--gold); }
+    .star.empty { color: var(--surface-3); }
+
+    .card-dates {
+      margin-top: 8px;
+      font-size: .76rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .date-item { display: flex; align-items: center; gap: 4px; }
+    .date-item svg { width: 11px; height: 11px; opacity: .6; }
+
+    /* ─── ADD BUTTON ─── */
+    .btn-add {
+      width: 100%;
+      padding: 12px;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: .82rem;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn-add:hover {
+      border-color: var(--accent);
+      color: var(--accent-2);
+      background: rgba(124,58,237,.06);
+    }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      position: relative;
+      box-shadow: 0 40px 80px rgba(0,0,0,.5);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -.03em;
+      margin-bottom: 24px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--border-hover); }
+    .modal-close svg { width: 14px; height: 14px; }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .75rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus { border-color: var(--accent); }
+
+    .form-select { cursor: pointer; }
+    .form-select option { background: var(--surface-2); }
+
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ─── RATING SECTION ─── */
+    .rating-section { margin-bottom: 20px; }
+
+    .rating-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .75rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .final-score-badge {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .criteria-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .criterion-row {
+      display: grid;
+      grid-template-columns: 1fr auto 90px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .criterion-name {
+      font-size: .85rem;
+      color: var(--text);
+    }
+
+    .criterion-score-display {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .85rem;
+      min-width: 28px;
+      text-align: right;
+      color: var(--accent-2);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--surface-3);
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+    }
+
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ─── SUBMIT ROW ─── */
+    .submit-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: .85rem;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-cancel:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .85rem;
+      padding: 10px 24px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(124,58,237,.3);
+      transition: all .2s;
+    }
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,.4); }
+
+    /* ─── SEARCH / FILTER ─── */
+    .list-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 16px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 99px; }
+
+    @media (max-width: 600px) {
+      .profile-header { gap: 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .criterion-row { grid-template-columns: 1fr auto 80px; }
+      .media-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- NAV -->
+    <nav class="top-nav">
+      <a class="nav-logo" href="./index.html">HL</a>
+      <a class="btn-back" href="./index.html">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Voltar ao catálogo
+      </a>
+    </nav>
+
+    <!-- PROFILE HEADER -->
+    <header class="profile-header">
+      <div class="avatar-wrap">
+        <div class="avatar-ring" id="avatarRing" title="Clique para trocar foto">
+          <div class="avatar-inner" id="avatarInner">
+            <span class="avatar-placeholder" id="avatarPlaceholder">HL</span>
+            <img id="avatarImg" style="display:none" alt="Foto de perfil"/>
+            <div class="avatar-overlay">Trocar foto</div>
+          </div>
+        </div>
+        <input type="file" class="avatar-upload" id="avatarUpload" accept="image/*"/>
+      </div>
+
+      <div class="profile-info">
+        <div class="profile-name-wrap">
+          <input
+            class="profile-name"
+            id="profileName"
+            type="text"
+            placeholder="Seu nome"
+            value=""
+            spellcheck="false"
+          />
+          <button class="btn-edit-name" title="Editar nome">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="profile-meta" id="profileMeta">
+          <span class="meta-stat"><strong id="metaFilmes">0</strong> filmes</span>
+          <span class="meta-stat"><strong id="metaSeries">0</strong> séries</span>
+          <span class="meta-stat"><strong id="metaAnimes">0</strong> animes</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-label">Total visto</div>
+        <div class="stat-value purple" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Para ver</div>
+        <div class="stat-value" id="statWantlist">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Nota média</div>
+        <div class="stat-value gold" id="statAvg">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Melhor nota</div>
+        <div class="stat-value green" id="statBest">—</div>
+      </div>
+    </div>
+
+    <!-- MAIN TABS -->
+    <div class="main-tabs">
+      <button class="main-tab active" data-tab="watched">Já vi</button>
+      <button class="main-tab" data-tab="wantlist">Quero ver</button>
+    </div>
+
+    <!-- ── JÁ VI ── -->
+    <div class="panel active" id="panel-watched">
+      <div class="section-header">
+        <div class="section-title">Mídias assistidas</div>
+        <div class="media-sub-tabs">
+          <button class="sub-tab active" data-sub="all">Todas</button>
+          <button class="sub-tab" data-sub="filme">Filmes</button>
+          <button class="sub-tab" data-sub="serie">Séries</button>
+          <button class="sub-tab" data-sub="anime">Animes</button>
+        </div>
+      </div>
+
+      <div class="list-controls">
+        <input class="search-input" type="search" placeholder="Buscar título…" id="watchedSearch"/>
+      </div>
+
+      <div class="media-grid" id="watchedGrid"></div>
+      <button class="btn-add" id="btnAddWatched">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3v10M3 8h10" stroke-linecap="round"/>
+        </svg>
+        Adicionar mídia
+      </button>
+    </div>
+
+    <!-- ── QUERO VER ── -->
+    <div class="panel" id="panel-wantlist">
+      <div class="section-header">
+        <div class="section-title">Lista para assistir</div>
+        <div class="media-sub-tabs" id="wantSubTabs">
+          <button class="sub-tab active" data-sub="all">Todas</button>
+          <button class="sub-tab" data-sub="filme">Filmes</button>
+          <button class="sub-tab" data-sub="serie">Séries</button>
+          <button class="sub-tab" data-sub="anime">Animes</button>
+        </div>
+      </div>
+
+      <div class="list-controls">
+        <input class="search-input" type="search" placeholder="Buscar título…" id="wantSearch"/>
+      </div>
+
+      <div class="media-grid" id="wantGrid"></div>
+      <button class="btn-add" id="btnAddWant">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3v10M3 8h10" stroke-linecap="round"/>
+        </svg>
+        Adicionar à lista
+      </button>
+    </div>
+
+  </div><!-- /app -->
+
+
+  <!-- ══════════ MODAL: ADICIONAR / EDITAR MÍDIA ASSISTIDA ══════════ -->
+  <div class="modal-overlay" id="modalWatched">
+    <div class="modal">
+      <div class="modal-title" id="modalWatchedTitle">Adicionar mídia</div>
+      <button class="modal-close" id="closeModalWatched">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <input type="hidden" id="editWatchedId" value=""/>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Título</label>
+          <input class="form-input" id="wTitle" placeholder="Nome do título…"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="wType">
+            <option value="filme">Filme</option>
+            <option value="serie">Série</option>
+            <option value="anime">Anime</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ano</label>
+        <input class="form-input" id="wYear" type="number" min="1888" max="2099" placeholder="Ex: 2023"/>
+      </div>
+
+      <!-- Datas (dinâmicas por tipo) -->
+      <div id="dateFieldsFilme" class="form-group">
+        <label class="form-label">Data que assistiu</label>
+        <input class="form-input" id="wDateFilme" type="date"/>
+      </div>
+
+      <div id="dateFieldsSerie" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Comecei em</label>
+            <input class="form-input" id="wDateStart" type="date"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Terminei em</label>
+            <input class="form-input" id="wDateEnd" type="date"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- AVALIAÇÃO -->
+      <div class="rating-section">
+        <div class="rating-title">
+          <span>Avaliação</span>
+          <span class="final-score-badge" id="finalScoreBadge">— / 10</span>
+        </div>
+        <div class="criteria-list" id="criteriaList">
+          <!-- preenchido via JS conforme tipo -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notas pessoais</label>
+        <textarea class="form-textarea" id="wNotes" placeholder="Impressões, spoilers, o que sentiu…"></textarea>
+      </div>
+
+      <div class="submit-row">
+        <button class="btn-cancel" id="cancelModalWatched">Cancelar</button>
+        <button class="btn-save" id="saveWatched">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MODAL: ADICIONAR / EDITAR QUERO VER ══════════ -->
+  <div class="modal-overlay" id="modalWant">
+    <div class="modal">
+      <div class="modal-title" id="modalWantTitle">Adicionar à lista</div>
+      <button class="modal-close" id="closeModalWant">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <input type="hidden" id="editWantId" value=""/>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Título</label>
+          <input class="form-input" id="wtTitle" placeholder="Nome do título…"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="wtType">
+            <option value="filme">Filme</option>
+            <option value="serie">Série</option>
+            <option value="anime">Anime</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Ano</label>
+          <input class="form-input" id="wtYear" type="number" min="1888" max="2099" placeholder="Ex: 2024"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="wtPriority">
+            <option value="alta">🔴 Alta</option>
+            <option value="media" selected>🟡 Média</option>
+            <option value="baixa">🟢 Baixa</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Motivo / anotação</label>
+        <textarea class="form-textarea" id="wtNotes" placeholder="Por que quer assistir?"></textarea>
+      </div>
+
+      <div class="submit-row">
+        <button class="btn-cancel" id="cancelModalWant">Cancelar</button>
+        <button class="btn-save" id="saveWant">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+  // ────────────────────────────────────────────
+  //  STATE + PERSISTENCE
+  // ────────────────────────────────────────────
+  const STORAGE_KEYS = {
+    profile: 'hl_profile_v1',
+    watched: 'hl_watched_v1',
+    wantlist: 'hl_wantlist_v1',
+    avatar: 'hl_avatar_v1',
+  };
+
+  function load(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  }
+  function save(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  const state = {
+    profile: load(STORAGE_KEYS.profile, { name: '' }),
+    watched: load(STORAGE_KEYS.watched, []),
+    wantlist: load(STORAGE_KEYS.wantlist, []),
+    watchedFilter: 'all',
+    wantFilter: 'all',
+    currentMainTab: 'watched',
+  };
+
+  function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+  // ────────────────────────────────────────────
+  //  CRITERIA per media type
+  // ────────────────────────────────────────────
+  const CRITERIA = {
+    filme: [
+      { key: 'roteiro',     label: 'Roteiro & narrativa'    },
+      { key: 'direcao',     label: 'Direção & estética'     },
+      { key: 'atuacao',     label: 'Atuações'               },
+      { key: 'trilha',      label: 'Trilha sonora'          },
+      { key: 'impacto',     label: 'Impacto emocional'      },
+    ],
+    serie: [
+      { key: 'roteiro',     label: 'Roteiro & coerência'    },
+      { key: 'personagens', label: 'Personagens & arcos'    },
+      { key: 'ritmo',       label: 'Ritmo & pacing'         },
+      { key: 'atuacao',     label: 'Atuações'               },
+      { key: 'vicio',       label: 'Fator viciante'         },
+    ],
+    anime: [
+      { key: 'historia',    label: 'História & roteiro'     },
+      { key: 'personagens', label: 'Personagens'            },
+      { key: 'animacao',    label: 'Animação & arte'        },
+      { key: 'trilha',      label: 'Trilha / OST'           },
+      { key: 'emocao',      label: 'Impacto emocional'      },
+    ],
+  };
+
+  function calcScore(ratings) {
+    const vals = Object.values(ratings).map(Number).filter(v => !isNaN(v));
+    if (!vals.length) return null;
+    return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+  }
+
+  function scoreClass(s) {
+    if (s === null) return 'none';
+    if (s >= 8) return 'high';
+    if (s >= 5) return 'mid';
+    return 'low';
+  }
+
+  // ────────────────────────────────────────────
+  //  AVATAR
+  // ────────────────────────────────────────────
+  const avatarRing   = document.getElementById('avatarRing');
+  const avatarUpload = document.getElementById('avatarUpload');
+  const avatarImg    = document.getElementById('avatarImg');
+  const avatarPH     = document.getElementById('avatarPlaceholder');
+
+  function loadAvatar() {
+    const src = localStorage.getItem(STORAGE_KEYS.avatar);
+    if (src) { avatarImg.src = src; avatarImg.style.display = ''; avatarPH.style.display = 'none'; }
+  }
+
+  avatarRing.addEventListener('click', () => avatarUpload.click());
+  avatarUpload.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const src = ev.target.result;
+      avatarImg.src = src;
+      avatarImg.style.display = '';
+      avatarPH.style.display = 'none';
+      try { localStorage.setItem(STORAGE_KEYS.avatar, src); } catch {}
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ────────────────────────────────────────────
+  //  PROFILE NAME
+  // ────────────────────────────────────────────
+  const profileNameEl = document.getElementById('profileName');
+  profileNameEl.value = state.profile.name;
+  profileNameEl.addEventListener('input', () => {
+    state.profile.name = profileNameEl.value;
+    save(STORAGE_KEYS.profile, state.profile);
+    updateAvatarPlaceholder();
+  });
+
+  function updateAvatarPlaceholder() {
+    const n = state.profile.name.trim();
+    avatarPH.textContent = n ? n.slice(0,2).toUpperCase() : 'HL';
+  }
+  updateAvatarPlaceholder();
+
+  // ────────────────────────────────────────────
+  //  MAIN TABS
+  // ────────────────────────────────────────────
+  document.querySelectorAll('.main-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      state.currentMainTab = tab;
+      document.getElementById(`panel-${tab}`).classList.add('active');
+    });
+  });
+
+  // ────────────────────────────────────────────
+  //  SUB TABS
+  // ────────────────────────────────────────────
+  function setupSubTabs(containerSelector, onFilter) {
+    document.querySelectorAll(`${containerSelector} .sub-tab`).forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll(`${containerSelector} .sub-tab`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onFilter(btn.dataset.sub);
+      });
+    });
+  }
+
+  setupSubTabs('#panel-watched', sub => {
+    state.watchedFilter = sub;
+    renderWatched();
+  });
+
+  setupSubTabs('#panel-wantlist', sub => {
+    state.wantFilter = sub;
+    renderWant();
+  });
+
+  // ────────────────────────────────────────────
+  //  SEARCH
+  // ────────────────────────────────────────────
+  document.getElementById('watchedSearch').addEventListener('input', renderWatched);
+  document.getElementById('wantSearch').addEventListener('input', renderWant);
+
+  // ────────────────────────────────────────────
+  //  RENDER: WATCHED
+  // ────────────────────────────────────────────
+  function renderWatched() {
+    const grid  = document.getElementById('watchedGrid');
+    const q     = document.getElementById('watchedSearch').value.toLowerCase();
+    const items = state.watched.filter(i =>
+      (state.watchedFilter === 'all' || i.type === state.watchedFilter) &&
+      (!q || i.title.toLowerCase().includes(q))
+    );
+    grid.innerHTML = items.length ? items.map(cardWatched).join('') : emptyState('Nenhuma mídia aqui ainda', '🎬');
+    updateStats();
+    bindCardActions(grid, 'watched');
+  }
+
+  function cardWatched(item) {
+    const score = calcScore(item.ratings || {});
+    const sc    = scoreClass(score);
+    const type  = item.type;
+    const tagLabel = type === 'filme' ? 'Filme' : type === 'serie' ? 'Série' : 'Anime';
+
+    let datesHtml = '';
+    if (type === 'filme' && item.dateWatched) {
+      datesHtml = `<div class="card-dates"><span class="date-item">${calSvg()} ${fmt(item.dateWatched)}</span></div>`;
+    } else if ((type === 'serie' || type === 'anime') && (item.dateStart || item.dateEnd)) {
+      const s = item.dateStart ? `${calSvg()} Início: ${fmt(item.dateStart)}` : '';
+      const e = item.dateEnd   ? `${calSvg()} Fim: ${fmt(item.dateEnd)}`     : '';
+      datesHtml = `<div class="card-dates">${[s,e].filter(Boolean).map(x=>`<span class="date-item">${x}</span>`).join('')}</div>`;
+    }
+
+    return `
+      <div class="media-card" data-id="${item.id}">
+        <div class="card-top">
+          <div class="card-title">${esc(item.title)}</div>
+          <div class="card-actions">
+            <button class="btn-icon" data-action="edit" title="Editar">${editSvg()}</button>
+            <button class="btn-icon danger" data-action="delete" title="Remover">${trashSvg()}</button>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="card-tag ${type}">${tagLabel}</span>
+          ${item.year ? `<span>${item.year}</span>` : ''}
+        </div>
+        <div class="card-score">
+          <div class="score-badge ${sc}">${score !== null ? score : '—'}</div>
+          ${score !== null ? starsHtml(+score) : ''}
+        </div>
+        ${datesHtml}
+        ${item.notes ? `<div class="card-dates" style="margin-top:8px;color:var(--muted);font-size:.8rem;line-height:1.4;">${esc(item.notes).slice(0,100)}${item.notes.length>100?'…':''}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ────────────────────────────────────────────
+  //  RENDER: WANTLIST
+  // ────────────────────────────────────────────
+  function renderWant() {
+    const grid  = document.getElementById('wantGrid');
+    const q     = document.getElementById('wantSearch').value.toLowerCase();
+    const items = state.wantlist.filter(i =>
+      (state.wantFilter === 'all' || i.type === state.wantFilter) &&
+      (!q || i.title.toLowerCase().includes(q))
+    );
+    grid.innerHTML = items.length ? items.map(cardWant).join('') : emptyState('Lista vazia — adicione títulos!', '📋');
+    updateStats();
+    bindCardActions(grid, 'wantlist');
+  }
+
+  function cardWant(item) {
+    const type = item.type;
+    const tagLabel = type === 'filme' ? 'Filme' : type === 'serie' ? 'Série' : 'Anime';
+    const prioMap = { alta:'🔴 Alta', media:'🟡 Média', baixa:'🟢 Baixa' };
+    return `
+      <div class="media-card" data-id="${item.id}">
+        <div class="card-top">
+          <div class="card-title">${esc(item.title)}</div>
+          <div class="card-actions">
+            <button class="btn-icon" data-action="edit" title="Editar">${editSvg()}</button>
+            <button class="btn-icon danger" data-action="delete" title="Remover">${trashSvg()}</button>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="card-tag ${type}">${tagLabel}</span>
+          ${item.year ? `<span>${item.year}</span>` : ''}
+          <span style="font-size:.75rem;">${prioMap[item.priority] || ''}</span>
+        </div>
+        ${item.notes ? `<div class="card-dates" style="margin-top:8px;color:var(--muted);font-size:.8rem;line-height:1.4;">${esc(item.notes).slice(0,100)}${item.notes.length>100?'…':''}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ────────────────────────────────────────────
+  //  BIND CARD ACTIONS
+  // ────────────────────────────────────────────
+  function bindCardActions(grid, list) {
+    grid.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const card = btn.closest('.media-card');
+        const id   = card.dataset.id;
+        if (btn.dataset.action === 'delete') {
+          if (!confirm('Remover este título?')) return;
+          if (list === 'watched') {
+            state.watched = state.watched.filter(i => i.id !== id);
+            save(STORAGE_KEYS.watched, state.watched);
+            renderWatched();
+          } else {
+            state.wantlist = state.wantlist.filter(i => i.id !== id);
+            save(STORAGE_KEYS.wantlist, state.wantlist);
+            renderWant();
+          }
+        } else if (btn.dataset.action === 'edit') {
+          if (list === 'watched') {
+            const item = state.watched.find(i => i.id === id);
+            if (item) openEditWatched(item);
+          } else {
+            const item = state.wantlist.find(i => i.id === id);
+            if (item) openEditWant(item);
+          }
+        }
+      });
+    });
+  }
+
+  // ────────────────────────────────────────────
+  //  STATS
+  // ────────────────────────────────────────────
+  function updateStats() {
+    const wc = state.watched;
+    document.getElementById('statTotal').textContent    = wc.length;
+    document.getElementById('statWantlist').textContent = state.wantlist.length;
+    document.getElementById('metaFilmes').textContent   = wc.filter(i=>i.type==='filme').length;
+    document.getElementById('metaSeries').textContent   = wc.filter(i=>i.type==='serie').length;
+    document.getElementById('metaAnimes').textContent   = wc.filter(i=>i.type==='anime').length;
+
+    const scores = wc.map(i => calcScore(i.ratings||{})).filter(s => s !== null).map(Number);
+    if (scores.length) {
+      const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+      const best = Math.max(...scores).toFixed(1);
+      document.getElementById('statAvg').textContent  = avg;
+      document.getElementById('statBest').textContent = best;
+    } else {
+      document.getElementById('statAvg').textContent  = '—';
+      document.getElementById('statBest').textContent = '—';
+    }
+  }
+
+  // ────────────────────────────────────────────
+  //  MODAL: WATCHED — open/save
+  // ────────────────────────────────────────────
+  const modalWatched = document.getElementById('modalWatched');
+
+  function openAddWatched() {
+    document.getElementById('modalWatchedTitle').textContent = 'Adicionar mídia assistida';
+    document.getElementById('editWatchedId').value = '';
+    document.getElementById('wTitle').value = '';
+    document.getElementById('wType').value  = 'filme';
+    document.getElementById('wYear').value  = '';
+    document.getElementById('wDateFilme').value = '';
+    document.getElementById('wDateStart').value  = '';
+    document.getElementById('wDateEnd').value    = '';
+    document.getElementById('wNotes').value = '';
+    updateDateFields('filme');
+    buildCriteria('filme', {});
+    modalWatched.classList.add('open');
+  }
+
+  function openEditWatched(item) {
+    document.getElementById('modalWatchedTitle').textContent = 'Editar mídia';
+    document.getElementById('editWatchedId').value = item.id;
+    document.getElementById('wTitle').value = item.title || '';
+    document.getElementById('wType').value  = item.type  || 'filme';
+    document.getElementById('wYear').value  = item.year  || '';
+    document.getElementById('wDateFilme').value = item.dateWatched || '';
+    document.getElementById('wDateStart').value  = item.dateStart || '';
+    document.getElementById('wDateEnd').value    = item.dateEnd   || '';
+    document.getElementById('wNotes').value = item.notes || '';
+    updateDateFields(item.type);
+    buildCriteria(item.type, item.ratings || {});
+    modalWatched.classList.add('open');
+  }
+
+  document.getElementById('wType').addEventListener('change', e => {
+    updateDateFields(e.target.value);
+    buildCriteria(e.target.value, {});
+  });
+
+  function updateDateFields(type) {
+    const isFilme = type === 'filme';
+    document.getElementById('dateFieldsFilme').style.display = isFilme ? '' : 'none';
+    document.getElementById('dateFieldsSerie').style.display = isFilme ? 'none' : '';
+  }
+
+  function buildCriteria(type, existing) {
+    const list    = document.getElementById('criteriaList');
+    const badge   = document.getElementById('finalScoreBadge');
+    const criteria = CRITERIA[type] || CRITERIA.filme;
+
+    list.innerHTML = criteria.map(c => {
+      const val = existing[c.key] !== undefined ? existing[c.key] : 7;
+      return `
+        <div class="criterion-row">
+          <span class="criterion-name">${c.label}</span>
+          <span class="criterion-score-display" id="disp_${c.key}">${val}</span>
+          <input type="range" min="0" max="10" step="0.5"
+            value="${val}"
+            data-key="${c.key}"
+            id="range_${c.key}"
+            oninput="document.getElementById('disp_${c.key}').textContent=this.value; updateFinalScore();"
+          />
+        </div>
+      `;
+    }).join('');
+
+    updateFinalScore();
+  }
+
+  window.updateFinalScore = function() {
+    const ranges  = document.querySelectorAll('#criteriaList input[type=range]');
+    const ratings = {};
+    ranges.forEach(r => { ratings[r.dataset.key] = +r.value; });
+    const score = calcScore(ratings);
+    const badge = document.getElementById('finalScoreBadge');
+    badge.textContent = score !== null ? `${score} / 10` : '— / 10';
+    const cl = scoreClass(score);
+    badge.style.color = cl === 'high' ? 'var(--green)' : cl === 'mid' ? 'var(--gold)' : cl === 'low' ? 'var(--red)' : 'var(--text)';
+  };
+
+  document.getElementById('saveWatched').addEventListener('click', () => {
+    const title = document.getElementById('wTitle').value.trim();
+    if (!title) { alert('Informe o título.'); return; }
+
+    const type  = document.getElementById('wType').value;
+    const year  = document.getElementById('wYear').value;
+    const notes = document.getElementById('wNotes').value.trim();
+
+    // collect ratings
+    const ranges  = document.querySelectorAll('#criteriaList input[type=range]');
+    const ratings = {};
+    ranges.forEach(r => { ratings[r.dataset.key] = +r.value; });
+
+    // dates
+    const dateWatched = document.getElementById('wDateFilme').value;
+    const dateStart   = document.getElementById('wDateStart').value;
+    const dateEnd     = document.getElementById('wDateEnd').value;
+
+    const editId = document.getElementById('editWatchedId').value;
+    if (editId) {
+      const idx = state.watched.findIndex(i => i.id === editId);
+      if (idx !== -1) {
+        state.watched[idx] = { ...state.watched[idx], title, type, year, ratings, notes, dateWatched, dateStart, dateEnd };
+      }
+    } else {
+      state.watched.push({ id: genId(), title, type, year, ratings, notes, dateWatched, dateStart, dateEnd });
+    }
+
+    save(STORAGE_KEYS.watched, state.watched);
+    modalWatched.classList.remove('open');
+    renderWatched();
+  });
+
+  document.getElementById('closeModalWatched').addEventListener('click', () => modalWatched.classList.remove('open'));
+  document.getElementById('cancelModalWatched').addEventListener('click', () => modalWatched.classList.remove('open'));
+  modalWatched.addEventListener('click', e => { if (e.target === modalWatched) modalWatched.classList.remove('open'); });
+
+  document.getElementById('btnAddWatched').addEventListener('click', openAddWatched);
+
+  // ────────────────────────────────────────────
+  //  MODAL: WANTLIST
+  // ────────────────────────────────────────────
+  const modalWant = document.getElementById('modalWant');
+
+  function openAddWant() {
+    document.getElementById('modalWantTitle').textContent = 'Adicionar à lista';
+    document.getElementById('editWantId').value = '';
+    document.getElementById('wtTitle').value    = '';
+    document.getElementById('wtType').value     = 'filme';
+    document.getElementById('wtYear').value     = '';
+    document.getElementById('wtPriority').value = 'media';
+    document.getElementById('wtNotes').value    = '';
+    modalWant.classList.add('open');
+  }
+
+  function openEditWant(item) {
+    document.getElementById('modalWantTitle').textContent = 'Editar item';
+    document.getElementById('editWantId').value  = item.id;
+    document.getElementById('wtTitle').value     = item.title    || '';
+    document.getElementById('wtType').value      = item.type     || 'filme';
+    document.getElementById('wtYear').value      = item.year     || '';
+    document.getElementById('wtPriority').value  = item.priority || 'media';
+    document.getElementById('wtNotes').value     = item.notes    || '';
+    modalWant.classList.add('open');
+  }
+
+  document.getElementById('saveWant').addEventListener('click', () => {
+    const title    = document.getElementById('wtTitle').value.trim();
+    if (!title) { alert('Informe o título.'); return; }
+    const type     = document.getElementById('wtType').value;
+    const year     = document.getElementById('wtYear').value;
+    const priority = document.getElementById('wtPriority').value;
+    const notes    = document.getElementById('wtNotes').value.trim();
+
+    const editId = document.getElementById('editWantId').value;
+    if (editId) {
+      const idx = state.wantlist.findIndex(i => i.id === editId);
+      if (idx !== -1) state.wantlist[idx] = { ...state.wantlist[idx], title, type, year, priority, notes };
+    } else {
+      state.wantlist.push({ id: genId(), title, type, year, priority, notes });
+    }
+
+    save(STORAGE_KEYS.wantlist, state.wantlist);
+    modalWant.classList.remove('open');
+    renderWant();
+  });
+
+  document.getElementById('closeModalWant').addEventListener('click', () => modalWant.classList.remove('open'));
+  document.getElementById('cancelModalWant').addEventListener('click', () => modalWant.classList.remove('open'));
+  modalWant.addEventListener('click', e => { if (e.target === modalWant) modalWant.classList.remove('open'); });
+
+  document.getElementById('btnAddWant').addEventListener('click', openAddWant);
+
+  // ────────────────────────────────────────────
+  //  HELPERS
+  // ────────────────────────────────────────────
+  function esc(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmt(dateStr) {
+    if (!dateStr) return '';
+    const [y,m,d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function starsHtml(score) {
+    const full = Math.round(score / 2);
+    let h = '<div class="score-stars">';
+    for (let i = 1; i <= 5; i++) {
+      h += `<span class="star ${i <= full ? 'filled' : 'empty'}">★</span>`;
+    }
+    return h + '</div>';
+  }
+
+  function emptyState(msg, icon) {
+    return `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">${icon}</div><div class="empty-text">${msg}</div></div>`;
+  }
+
+  function calSvg() {
+    return `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M5 1v4M11 1v4M2 7h12" stroke-linecap="round"/></svg>`;
+  }
+
+  function editSvg() {
+    return `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  function trashSvg() {
+    return `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M6 4V3h4v1M5 4l1 9h4l1-9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  // ────────────────────────────────────────────
+  //  INIT
+  // ────────────────────────────────────────────
+  loadAvatar();
+  renderWatched();
+  renderWant();
+  updateStats();
+  </script>
+</body>
+</html>
